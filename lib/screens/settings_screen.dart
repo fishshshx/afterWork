@@ -34,10 +34,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final bytes = await service.exportToZip(zipPath);
 
       if (!mounted) return;
-      await Share.shareXFiles(
-        [XFile(zipPath)],
-        subject: '下班后数据备份',
-        text: '下班后 App 数据备份（${(bytes / 1024).toStringAsFixed(1)} KB）',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(zipPath)],
+          subject: '下班后数据备份',
+          text: '下班后 App 数据备份（${(bytes / 1024).toStringAsFixed(1)} KB）',
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -50,14 +52,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _importData() async {
     if (_busy) return;
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['zip'],
-        allowMultiple: false,
       );
-      if (result == null || result.files.isEmpty) return;
+      if (files.isEmpty) return;
 
-      final path = result.files.single.path;
+      final path = files.first.path;
       if (path == null) {
         _showError('无法读取所选文件');
         return;
